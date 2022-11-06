@@ -1,9 +1,10 @@
-module github.com/mdlayher/apcupsd_exporter
+module github.com/givanov/apcupsd_exporter
 
-go 1.17
+go 1.18
 
 require (
 	github.com/mdlayher/apcupsd v0.0.0-20220314153302-72ccd80310d1
+	github.com/mdlayher/apcupsd_exporter v0.3.0
 	github.com/prometheus/client_golang v1.12.1
 )
 

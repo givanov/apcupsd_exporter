@@ -1,0 +1,80 @@
+{
+  "name": "apcupsd_exporter",
+  "description": "",
+  "main": "cmd/apcupsd_exporter/main.go",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:givanov/apcupsd_exporter.git"
+  },
+  "author": "givanov",
+  "devDependencies": {
+    "@semantic-release/commit-analyzer": "^9.0.2",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/github": "^8.0.6",
+    "@semantic-release/release-notes-generator": "^10.0.3",
+    "env-ci": "^7.3.0",
+    "fstream": "^1.0.12",
+    "https-proxy-agent": "^5.0.1",
+    "npm": "^8.19.3",
+    "semantic-release": "^19.0.5",
+    "tar": "^6.1.12"
+  },
+  "release": {
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "releaseRules": [
+            {
+              "type": "fix",
+              "release": "patch"
+            },
+            {
+              "type": "refactor",
+              "release": "patch"
+            },
+            {
+              "type": "feat",
+              "release": "minor"
+            },
+            {
+              "type": "major",
+              "release": "major"
+            }
+          ]
+        }
+      ],
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/exec",
+        {
+          "prepareCmd": "make build-cross export-tag-github-actions VERSION=v${nextRelease.version}"
+        }
+      ],
+      [
+        "@semantic-release/github",
+        {
+          "assets": [],
+          "successComment": "This ${issue.pull_request ? 'pull request' : 'issue'} is included in version ${nextRelease.version}",
+          "failComment": "The release from ${branch} had failed due to the following errors:\n- ${errors.map(err => err.message).join('\\n- ')}"
+        }
+      ]
+    ],
+    "preset": "angular",
+    "branches": [
+      "main"
+    ],
+    "tagFormat": "v${version}",
+    "ci": false
+  },
+  "version": "0.0.0-development",
+  "scripts": {
+    "semantic-release": "semantic-release"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "dependencies": {
+    "npm-check-updates": "^16.3.16"
+  }
+}
