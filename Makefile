@@ -8,7 +8,7 @@ BINDIR := bin
 
 LDFLAGS := -extldflags "-static"
 
-BUILD_PATH = github.com/singularityconsulting/sparkpost-event-poller
+BUILD_PATH = github.com/givanov/apcupsd_exporter
 
 GOLANGCI_LINT_VERSION := v1.37.1
 
