@@ -45,7 +45,7 @@ endif
 VERSION ?= $(TMP_VERSION)
 
 DIST_DIR := _dist
-TARGETS   ?= darwin/amd64 linux/amd64 windows/amd64
+TARGETS ?= darwin/amd64 linux/amd64 windows/amd64 linux/arm64
 TARGET_DIRS = find * -type d -exec
 
 # Only set Version if building a tag or VERSION is set
