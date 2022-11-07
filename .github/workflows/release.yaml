@@ -46,6 +46,7 @@ jobs:
           go-version: ${{ env.GOLANG_VERSION }}
 
       - name: release
+        id: release
         run: make semantic-release-ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
