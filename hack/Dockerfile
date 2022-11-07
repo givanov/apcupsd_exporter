@@ -1,6 +1,6 @@
 FROM alpine:3.13.2
 
-RUN adduser -D sparkpost-event-receiver
+RUN adduser -D apcupsd_exporter
 
 USER apcupsd_exporter
 
