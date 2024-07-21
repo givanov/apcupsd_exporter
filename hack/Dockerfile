@@ -18,6 +18,6 @@ RUN adduser -D apcupsd_exporter
 
 USER apcupsd_exporter
 
-ADD /go/github.com/givanov/apcupsd_exporter/bin/apcupsd_exporter /usr/local/bin/apcupsd_exporter
+COPY --from=builder /go/github.com/givanov/apcupsd_exporter/bin/apcupsd_exporter /usr/local/bin/apcupsd_exporter
 
 ENTRYPOINT ["/usr/local/bin/apcupsd_exporter"]
