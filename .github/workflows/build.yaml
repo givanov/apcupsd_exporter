@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
   build:
-    name: build and test
+    name: build
     runs-on: ubuntu-latest
     env:
       GOLANG_VERSION: "1.22.5"
@@ -18,4 +18,4 @@ jobs:
           go-version: ${{ env.GOLANG_VERSION }}
 
       - name: build and test
-        run: make build-cross
+        run: make build
