@@ -63,7 +63,7 @@ plugins:
       - BREAKING CHANGES
       - BREAKING-CHANGES
 - - "@semantic-release/exec"
-  - prepareCmd: make build-cross export-tag-github-actions VERSION=${nextRelease.version}
+  - prepareCmd: make build export-tag-github-actions VERSION=${nextRelease.version}
 - - "@semantic-release/github"
   - successComment: false
     failTitle: false
