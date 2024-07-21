@@ -10,17 +10,6 @@ LDFLAGS := -extldflags "-static"
 
 BUILD_PATH = github.com/givanov/apcupsd_exporter
 
-GOLANGCI_LINT_VERSION := v1.37.1
-
-HAS_GOX := $(shell command -v gox;)
-HAS_GO_IMPORTS := $(shell command -v goimports;)
-HAS_GO_MOCKGEN := $(shell command -v mockgen;)
-HAS_GOLANGCI_LINT := $(shell command -v golangci-lint;)
-GOLANGCI_VERSION_CHECK := $(shell golangci-lint --version | grep -oh $(GOLANGCI_LINT_VERSION);)
-HAS_GO_BIN := $(shell command -v gobin;)
-HAS_GCI := $(shell command -v gci;)
-HAS_GO_FUMPT := $(shell command -v gofumpt;)
-
 SRC = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 GIT_SHORT_COMMIT := $(shell git rev-parse --short HEAD)
@@ -54,6 +43,8 @@ ifneq ($(BINARY_VERSION),"")
 	CHART_VERSION = $(VERSION)
 endif
 
+GOARCH ?= amd64
+GOOS ?= linux
 LDFLAGS += -X $(BUILD_PATH)/pkg/version.GitCommit=$(GIT_SHORT_COMMIT)
 
 SHELL := /bin/bash
@@ -66,43 +57,22 @@ info:
 	@echo "Git Commit:        $(GIT_SHORT_COMMIT)"
 	@echo "binary:            $(BINARY_VERSION)"
 
-build: clean-bin info bootstrap generate tidy fmt 
+build: clean-bin info tidy fmt
 	@echo "build target..."
-	@CGO_ENABLED=0 GOARCH=amd64 go build -o $(BINDIR)/$(APP_NAME) -ldflags '$(LDFLAGS)' ./cmd/apcupsd_exporter/main.go
-
-.PHONY: build-cross
-build-cross: clean bootstrap tidy generate fmt test
-	CGO_ENABLED=0 gox -parallel=3 -output="$(DIST_DIR)/{{.OS}}-{{.Arch}}/$(APP_NAME)" -osarch='$(TARGETS)' -ldflags '$(LDFLAGS)' ./cmd/apcupsd_exporter/...
-
-.PHONY: dist
-dist: clean build-cross
-	( \
-		cd $(DIST_DIR) && \
-		$(TARGET_DIRS) tar -zcf $(APP_NAME)-${VERSION}-{}.tar.gz {} \; && \
-		$(TARGET_DIRS) zip -r $(APP_NAME)-${VERSION}-{}.zip {} \; \
-	)
+	@CGO_ENABLED=0 GOARCH=$(GOARCH) GOOS=$(GOOS) go build -o $(BINDIR)/$(APP_NAME) -ldflags '$(LDFLAGS)' ./cmd/apcupsd_exporter/main.go
 
 .PHONY: clean-bin
 clean-bin: 
 	@rm -rf $(BINDIR)
 
-.PHONY: clean-dist
-clean-dist:
-	@rm -rf $(DIST_DIR)
 
 .PHONY: clean
-clean: clean-bin clean-dist
+clean: clean-bin
 
 .PHONY: tidy
 tidy:
 	@echo "tidy target..."
 	@go mod tidy
-
-.PHONY: generate
-generate: bootstrap
-	@echo "generate target..."
-	@rm -rf ./pkg/mocks
-	@go generate ./...
 
 .PHONY: vendor
 vendor: tidy
@@ -110,82 +80,34 @@ vendor: tidy
 	@go mod vendor
 
 .PHONY: test
-test: generate build
+test: build
 	@echo "test target..."
 	@go test ./... -v -count=1
 
-.PHONY: lint
-lint: bootstrap bootstrap-lint build
-	@echo "lint target..."
-	@golangci-lint run --enable-all --disable lll,nakedret,funlen,gochecknoglobals,gomnd,wsl,errcheck,exhaustivestruct,gochecknoinits ./...
-
-.PHONY: bootstrap-lint
-bootstrap-lint:
-	@echo "bootstrap lint..."
-ifndef HAS_GOLANGCI_LINT
-	@echo "golangci-lint $(GOLANGCI_LINT_VERSION) not found..."
-	@gobin github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
-else
-	@echo "golangci-lint found, checking version..."
-ifeq ($(GOLANGCI_VERSION_CHECK), )
-	@echo "found different version, installing golangci-lint $(GOLANGCI_LINT_VERSION)..."
-	@gobin github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
-else
-	@echo "golangci-lint version $(GOLANGCI_VERSION_CHECK) found!"
-endif
-endif
-
-.PHONY: bootstrap
-bootstrap: 
-	@echo "bootstrap target..."
-ifndef HAS_GO_BIN
-	@GO111MODULE=off go get -u github.com/myitcv/gobin
-endif
-ifndef HAS_GO_IMPORTS
-	@gobin golang.org/x/tools/cmd/goimports
-endif
-ifndef HAS_GO_MOCKGEN
-	@go get -u github.com/golang/mock/gomock
-	@gobin github.com/golang/mock/mockgen
-endif
-ifndef HAS_GOX
-	@gobin github.com/mitchellh/gox
-endif
-ifndef HAS_GCI
-	@gobin github.com/daixiang0/gci
-endif
-ifndef HAS_GO_FUMPT
-	@gobin mvdan.cc/gofumpt
-endif
-
 .PHONY: fmt
-fmt: bootstrap
+fmt:
 	@echo "fmt target..."
-	@gci -w $(SRC)
-	@gofumpt -l -w $(SRC)
+	@gofmt -l -w -s $(SRC)
+
+# Semantic Release
+.PHONY: semantic-release-dependencies
+semantic-release-dependencies:
+	@npm install --save-dev semantic-release
+	@npm install @semantic-release/exec conventional-changelog-conventionalcommits -D
 
 .PHONY: semantic-release
-semantic-release:
+semantic-release: semantic-release-dependencies
 	@npm ci
 	@npx semantic-release
 
 .PHONY: semantic-release-ci
-semantic-release-ci:
+semantic-release-ci: semantic-release-dependencies
 	@npx semantic-release
 
 .PHONY: semantic-release-dry-run
-semantic-release-dry-run:
+semantic-release-dry-run: semantic-release-dependencies
 	@npm ci
 	@npx semantic-release -d
-
-.PHONY: install-npm-check-updates
-install-npm-check-updates:
-	npm install npm-check-updates
-
-.PHONY: update-dependencies
-update-dependencies: install-npm-check-updates
-	ncu -u
-	npm install
 
 export-tag-github-actions:
 	@echo "version=$(VERSION)" >> $${GITHUB_OUTPUT}

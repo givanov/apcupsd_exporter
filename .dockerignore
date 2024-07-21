@@ -1,0 +1,7 @@
+**/node_modules/
+**/bin
+.git
+hack/Dockerfile
+LICENSE
+README.md
+.gitignore
